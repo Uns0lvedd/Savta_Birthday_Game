@@ -381,7 +381,7 @@ function restartAnim(el){el.style.animation="none";void el.offsetWidth;el.style.
 
 function beginPlay(){
   show("game");
-  round.botTime=15000+Math.random()*5000;         // 15–20s in ms
+  round.botTime=30000+Math.random()*5000;         // 15–20s in ms
   round.startT=performance.now();
   $("#botStatus").textContent="racing…";
   $("#botBar").style.width="0%";
