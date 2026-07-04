@@ -381,7 +381,7 @@ function restartAnim(el){el.style.animation="none";void el.offsetWidth;el.style.
 
 function beginPlay(){
   show("game");
-  round.botTime=25000+Math.random()*10000;         // 25–35s in ms
+  round.botTime=15000+Math.random()*5000;         // 15–20s in ms
   round.startT=performance.now();
   $("#botStatus").textContent="racing…";
   $("#botBar").style.width="0%";
@@ -416,6 +416,7 @@ function showResult(won, youMs, botMs){
   $("#youTime").textContent=(youMs/1000).toFixed(2);
   $("#botTime").textContent=(botMs/1000).toFixed(2);
   $("#winActions").style.display = won ? "block":"none";
+  const sb=$("#saveScoreBtn"); sb.disabled=false; sb.textContent="💾 Save my time"; // reset for each new round
   round.savedTime = youMs;
 }
 
