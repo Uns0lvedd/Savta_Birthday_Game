@@ -403,7 +403,7 @@ function stopTaunts(){ clearInterval(tauntTimer); tauntTimer=null; }
 
 function beginPlay(){
   show("game");
-  round.botTime=15000+Math.random()*5000;         // 15–20s in ms
+  round.botTime=25000+Math.random()*15000;         // 25–40s in ms
   round.startT=performance.now();
   $("#botBar").style.width="0%";
   startTaunts();
