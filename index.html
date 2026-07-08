@@ -51,14 +51,21 @@
   @keyframes pop{0%{transform:scale(.3);opacity:0}40%{transform:scale(1);opacity:1}100%{transform:scale(1.15);opacity:0}}
 
   /* ---------- Game ---------- */
-  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-  .timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:22px;min-width:96px;}
+  .topbar{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+  .botrow{display:flex;align-items:center;gap:12px;}
+  .botface img{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:var(--shadow);display:block;}
+  .botface{font-size:56px;line-height:1;}
+  .bubble{position:relative;flex:1;background:#fff;color:#1a1f36;font-weight:800;font-size:15px;line-height:1.25;
+    padding:10px 14px;border-radius:16px;box-shadow:var(--shadow);min-width:0;}
+  .bubble::after{content:"";position:absolute;left:-9px;top:28px;border:9px solid transparent;border-right-color:#fff;border-left:0;}
+  @keyframes bpop{0%{transform:scale(.85);opacity:.4}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+  .raceRow{display:flex;align-items:center;gap:12px;}
+  .timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:34px;min-width:112px;}
   .botwrap{flex:1;}
-  .botlabel{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:3px;}
-  .bartrack{height:12px;background:#141931;border-radius:8px;overflow:hidden;position:relative;}
-  .barfill{height:100%;width:0%;background:linear-gradient(90deg,#ff9a5c,var(--bad));border-radius:8px;transition:width .1s linear;}
-  .bot-emoji{position:absolute;top:-8px;font-size:15px;transform:translateX(-50%);transition:left .1s linear;line-height:1;}
-  .bot-emoji img{width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:var(--shadow);display:block;}
+  .bartrack{height:14px;background:#141931;border-radius:9px;overflow:hidden;position:relative;}
+  .barfill{height:100%;width:0%;background:linear-gradient(90deg,#ff9a5c,var(--bad));border-radius:9px;transition:width .1s linear;}
+  .bot-emoji{position:absolute;top:-11px;font-size:18px;transform:translateX(-50%);transition:left .1s linear;line-height:1;}
+  .bot-emoji img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:var(--shadow);display:block;}
   #botTimeLabel img{width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;}
 
   .people{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px;}
@@ -148,10 +155,15 @@
   <!-- GAME -->
   <section id="game" class="screen">
     <div class="topbar">
-      <div class="timer" id="timer">0.00</div>
-      <div class="botwrap">
-        <div class="botlabel"><span id="botName">Savta Amalia</span><span id="botStatus">racing…</span></div>
-        <div class="bartrack"><div class="barfill" id="botBar"></div><div class="bot-emoji" id="botEmoji" style="left:0%">👵</div></div>
+      <div class="botrow">
+        <span class="botface" id="botFace">👵</span>
+        <div class="bubble" id="taunt">Cmon loser, faster!</div>
+      </div>
+      <div class="raceRow">
+        <div class="timer" id="timer">0.00</div>
+        <div class="botwrap">
+          <div class="bartrack"><div class="barfill" id="botBar"></div><div class="bot-emoji" id="botEmoji" style="left:0%">👵</div></div>
+        </div>
       </div>
     </div>
     <div class="people" id="people"></div>
@@ -379,12 +391,22 @@ function startRound(){
 }
 function restartAnim(el){el.style.animation="none";void el.offsetWidth;el.style.animation="";}
 
+const TAUNTS=["Cmon loser, faster!","Too slow for Savta!","What are you, 90???"];
+let tauntTimer=null;
+function pokeTaunt(){
+  const el=$("#taunt"); if(!el) return;
+  el.textContent=TAUNTS[Math.random()*TAUNTS.length|0];
+  el.style.animation="none"; void el.offsetWidth; el.style.animation="bpop .35s ease";
+}
+function startTaunts(){ clearInterval(tauntTimer); pokeTaunt(); tauntTimer=setInterval(pokeTaunt,2600); }
+function stopTaunts(){ clearInterval(tauntTimer); tauntTimer=null; }
+
 function beginPlay(){
   show("game");
-  round.botTime=25000+Math.random()*15000;         // 25–40s in ms
+  round.botTime=15000+Math.random()*5000;         // 15–20s in ms
   round.startT=performance.now();
-  $("#botStatus").textContent="racing…";
   $("#botBar").style.width="0%";
+  startTaunts();
   loop();
 }
 function loop(){
@@ -400,6 +422,7 @@ function loop(){
 function finish(playerWon){
   if(round.ended)return; round.ended=true;
   cancelAnimationFrame(round.raf);
+  stopTaunts();
   const elapsed=performance.now()-round.startT;
   const youMs = playerWon ? elapsed : round.botTime; // if bot won, your board time n/a
   round.finalYou = elapsed;
@@ -512,11 +535,13 @@ $("#saveScoreBtn").addEventListener("click",async()=>{
 
 /* Apply Savta Amalia's identity (name + optional photo) across the UI */
 function applyBot(){
-  const face = BOT_IMG ? `<img src="${BOT_IMG}" alt="">` : "👵";
-  $("#botName").textContent = BOT_NAME;
-  $("#botEmoji").innerHTML = face;
-  $("#botTimeLabel").innerHTML = face + " " + BOT_NAME;
-  $("#startFace").innerHTML = BOT_IMG ? `<img src="${BOT_IMG}" alt="Savta Amalia">` : "";
+  const big   = BOT_IMG ? `<img src="${BOT_IMG}" alt="Savta Amalia">` : "👵";
+  const small = BOT_IMG ? `<img src="${BOT_IMG}" alt="">` : "👵";
+  const set=(id,html)=>{const el=document.querySelector(id); if(el) el.innerHTML=html;};
+  set("#botFace", big);
+  set("#botEmoji", small);
+  set("#botTimeLabel", small + " " + BOT_NAME);
+  set("#startFace", BOT_IMG ? big : "");
 }
 applyBot();
 
